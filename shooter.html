@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Catch the Fruit</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #f0f8ff;
+      font-family: sans-serif;
+    }
+    canvas {
+      display: block;
+      background: #a2d5f2;
+    }
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+    }
+    .btn {
+      display: inline-block;
+      padding: 15px 30px;
+      margin: 0 20px;
+      font-size: 20px;
+      background: #333;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+
+<div class="controls">
+  <button class="btn" id="leftBtn">Left</button>
+  <button class="btn" id="rightBtn">Right</button>
+</div>
+
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const basket = {
+    x: canvas.width / 2 - 50,
+    y: canvas.height - 60,
+    width: 100,
+    height: 30,
+    color: "#8B4513",
+    speed: 15
+  };
+
+  const fruit = {
+    x: Math.random() * (canvas.width - 30),
+    y: 0,
+    size: 30,
+    color: "red",
+    speed: 5
+  };
+
+  let score = 0;
+  let missed = 0;
+  const maxMissed = 5;
+  let gameOver = false;
+  let moveLeft = false;
+  let moveRight = false;
+
+  function drawBasket() {
+    ctx.fillStyle = basket.color;
+    ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+  }
+
+  function drawFruit() {
+    ctx.beginPath();
+    ctx.arc(fruit.x + fruit.size / 2, fruit.y + fruit.size / 2, fruit.size / 2, 0, Math.PI * 2);
+    ctx.fillStyle = fruit.color;
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  function drawScore() {
+    ctx.fillStyle = "#000";
+    ctx.font = "20px Arial";
+    ctx.fillText(`Score: ${score}  Missed: ${missed}`, 20, 30);
+  }
+
+  function drawGameOver() {
+    ctx.fillStyle = "red";
+    ctx.font = "50px Arial";
+    ctx.fillText("Game Over", canvas.width / 2 - 150, canvas.height / 2);
+  }
+
+  function update() {
+    if (gameOver) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Move basket
+    if (moveLeft && basket.x > 0) basket.x -= basket.speed;
+    if (moveRight && basket.x + basket.width < canvas.width) basket.x += basket.speed;
+
+    // Move fruit
+    fruit.y += fruit.speed;
+
+    if (
+      fruit.y + fruit.size > basket.y &&
+      fruit.x + fruit.size > basket.x &&
+      fruit.x < basket.x + basket.width
+    ) {
+      score++;
+      resetFruit();
+    } else if (fruit.y > canvas.height) {
+      missed++;
+      resetFruit();
+    }
+
+    if (missed >= maxMissed) {
+      gameOver = true;
+    }
+
+    drawBasket();
+    drawFruit();
+    drawScore();
+    if (gameOver) drawGameOver();
+
+    requestAnimationFrame(update);
+  }
+
+  function resetFruit() {
+    fruit.y = 0;
+    fruit.x = Math.random() * (canvas.width - fruit.size);
+  }
+
+  // Keyboard support
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") moveLeft = true;
+    if (e.key === "ArrowRight") moveRight = true;
+  });
+
+  document.addEventListener("keyup", (e) => {
+    if (e.key === "ArrowLeft") moveLeft = false;
+    if (e.key === "ArrowRight") moveRight = false;
+  });
+
+  // Mobile touch buttons
+  document.getElementById("leftBtn").addEventListener("touchstart", () => moveLeft = true);
+  document.getElementById("rightBtn").addEventListener("touchstart", () => moveRight = true);
+  document.getElementById("leftBtn").addEventListener("touchend", () => moveLeft = false);
+  document.getElementById("rightBtn").addEventListener("touchend", () => moveRight = false);
+
+  update();
+</script>
+</body>
+</html>
